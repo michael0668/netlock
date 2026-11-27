@@ -209,8 +209,16 @@ class MainActivity : Activity() {
                 null
             } else if (q.isNotEmpty() && e.shared) {
                 // 搜到的是组内某个包时, 用它当标题, 免得搜 olc 却显示"设置"
-                val hit = e.packages.firstOrNull { it.lowercase().contains(q) }
-                if (hit != null) e.copy(label = labels[hit] ?: hit) else e
+                val hit = e.packages.firstOrNull { it.contains(q, ignoreCase = true) }
+                if (hit != null) {
+                    e.copy(
+                        label = labels[hit] ?: hit,
+                        hintPkg = hit,
+                        packages = listOf(hit) + e.packages.filter { it != hit },
+                    )
+                } else {
+                    e
+                }
             } else {
                 e
             }

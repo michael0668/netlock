@@ -13,6 +13,8 @@ data class AppEntry(
     val packages: List<String>,
     val isSystem: Boolean,
     val icon: Drawable?,
+    /** 搜索命中的那个包, 用来在行里显示具体包名 */
+    val hintPkg: String? = null,
 ) {
     val shared: Boolean get() = packages.size > 1
     val primaryPkg: String get() = packages.first()
