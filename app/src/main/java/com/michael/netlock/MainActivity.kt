@@ -46,6 +46,7 @@ class MainActivity : Activity() {
 
     private val all = ArrayList<AppEntry>()
     private val shown = ArrayList<AppEntry>()
+    private val labels = HashMap<String, String>()
     private val io = Executors.newSingleThreadExecutor()
     private var dirty = false
     private var rootOk = false
@@ -162,6 +163,10 @@ class MainActivity : Activity() {
             }
 
             val infos = pm.getInstalledApplications(0)
+            for (ai in infos) {
+                labels[ai.packageName] =
+                    runCatching { ai.loadLabel(pm).toString() }.getOrDefault(ai.packageName)
+            }
             val list = infos.groupBy { it.uid }.map { (uid, apps) ->
                 val primary = apps.firstOrNull { launcherPkgs.contains(it.packageName) } ?: apps.first()
                 AppEntry(
@@ -187,7 +192,7 @@ class MainActivity : Activity() {
         val q = etSearch.text.toString().trim().lowercase()
         val type = spType.selectedItemPosition
         val limit = spLimit.selectedItemPosition
-        val out = all.filter { e ->
+        val out = all.mapNotNull { e ->
             val hitQ = q.isEmpty() || e.label.lowercase().contains(q) ||
                 e.uid.toString() == q || e.packages.any { it.lowercase().contains(q) }
             val hitType = when (type) {
@@ -200,13 +205,22 @@ class MainActivity : Activity() {
                 2 -> Iface.entries.none { store.isDenied(it, e.uid) }
                 else -> true
             }
-            hitQ && hitType && hitLimit
+            if (!(hitQ && hitType && hitLimit)) {
+                null
+            } else if (q.isNotEmpty() && e.shared) {
+                // 搜到的是组内某个包时, 用它当标题, 免得搜 olc 却显示"设置"
+                val hit = e.packages.firstOrNull { it.lowercase().contains(q) }
+                if (hit != null) e.copy(label = labels[hit] ?: hit) else e
+            } else {
+                e
+            }
         }
         shown.clear()
         shown.addAll(out)
         adapter.submit(shown)
-        tvFooter.text = "显示 " + out.size + " / " + all.size + " 个 UID | 已限制 " +
-            store.deniedCount() + " 个 UID | 长按进入多选"
+        val pkgSum = out.sumOf { it.packages.size }
+        tvFooter.text = "显示 " + out.size + " 个 UID (含 " + pkgSum + " 个应用) / 共 " +
+            all.size + " 个 UID | 已限制 " + store.deniedCount() + " 个 | 长按多选"
     }
 
     private fun updateStatus() {

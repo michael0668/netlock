@@ -72,7 +72,7 @@ class AppAdapter(
         h.label.text = e.label
         h.pkg.text = buildString {
             if (e.shared) {
-                append(e.packages.size).append(" 个应用共用 UID ").append(e.uid)
+                append(e.packages.size).append(" 个应用共用 UID ").append(e.uid).append(" · 只能整组")
             } else {
                 append(e.primaryPkg).append("  uid=").append(e.uid)
             }
