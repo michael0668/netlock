@@ -42,6 +42,7 @@ class MainActivity : Activity() {
     private lateinit var lv: ListView
     private lateinit var batchBar: View
     private lateinit var tvBatch: TextView
+    private lateinit var btnBatchAll: Button
 
     private val all = ArrayList<AppEntry>()
     private val shown = ArrayList<AppEntry>()
@@ -69,6 +70,8 @@ class MainActivity : Activity() {
 
         batchBar = findViewById(R.id.batchBar)
         tvBatch = findViewById(R.id.tvBatch)
+        btnBatchAll = findViewById(R.id.btnBatchAll)
+        btnBatchAll.setOnClickListener { toggleSelectAll() }
         findViewById<Button>(R.id.btnBatchDeny).setOnClickListener { batchApply(true) }
         findViewById<Button>(R.id.btnBatchAllow).setOnClickListener { batchApply(false) }
         findViewById<Button>(R.id.btnBatchExit).setOnClickListener { exitBatch() }
@@ -203,7 +206,7 @@ class MainActivity : Activity() {
         shown.addAll(out)
         adapter.submit(shown)
         tvFooter.text = "显示 " + out.size + " / " + all.size + " 个 UID | 已限制 " +
-            store.deniedCount() + " 个 UID"
+            store.deniedCount() + " 个 UID | 长按进入多选"
     }
 
     private fun updateStatus() {
@@ -318,8 +321,7 @@ class MainActivity : Activity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menu.add(0, 1, 0, if (store.autoBoot) "开机自启: 开" else "开机自启: 关")
         menu.add(0, 2, 1, "查看规则脚本")
-        menu.add(0, 4, 2, "全选当前结果")
-        menu.add(0, 3, 3, "清空所有规则")
+        menu.add(0, 3, 2, "清空所有规则")
         return true
     }
 
@@ -338,11 +340,6 @@ class MainActivity : Activity() {
             2 -> {
                 val script = if (store.enabled) Firewall.buildRules(store) else Firewall.buildFlush()
                 showResult(RootShell.Result(0, script))
-            }
-            4 -> {
-                adapter.batchMode = true
-                adapter.selectAll(shown.map { it.uid })
-                updateBatchBar()
             }
             3 -> AlertDialog.Builder(this)
                 .setTitle("清空所有规则")
@@ -368,7 +365,16 @@ class MainActivity : Activity() {
             return
         }
         batchBar.visibility = View.VISIBLE
-        tvBatch.text = "已选 " + adapter.selected.size + " 个 UID"
+        tvBatch.text = "已选 " + adapter.selected.size + " / " + shown.size
+        val allPicked = shown.isNotEmpty() && shown.all { adapter.selected.contains(it.uid) }
+        btnBatchAll.text = if (allPicked) "全不选" else "全选"
+    }
+
+    /** 全选 / 全不选当前筛选结果。 */
+    private fun toggleSelectAll() {
+        val allPicked = shown.isNotEmpty() && shown.all { adapter.selected.contains(it.uid) }
+        adapter.selectAll(if (allPicked) emptyList() else shown.map { it.uid })
+        updateBatchBar()
     }
 
     /** 批量限制 / 解除, 三个维度分别勾选。 */
