@@ -34,7 +34,7 @@ NL_WIFI / NL_MOB / NL_VPN 内部:
   只勾"无线/流量"对走 VPN 的应用无效, 需要取消"VPN"列的勾选。
 - Android UID = `userId * 100000 + appId`, 分身/多用户应用有独立 UID, PackageManager
   给出的 `uid` 已是当前用户口径。
-- 拦截的真实单位是 **UID, 不是包名**。ColorOS 上 uid 1000 (android.uid.system) 被 47 个包共用,包括 @@com.oplus.olc@@、@@com.android.settings@@、@@com.oplus.trafficmonitor@@,所以拦截 olc 一定会连带这些应用。列表已按 UID 分组, 拦截共用 UID 前会列出受影响的应用。
+- 拦截的真实单位是 **UID, 不是包名**。ColorOS 上 uid 1000 (android.uid.system) 被 47 个包共用,包括 `com.oplus.olc`、`com.android.settings`、`com.oplus.trafficmonitor`,所以拦截 olc 一定会连带这些应用。列表已按 UID 分组, 拦截共用 UID 前会列出受影响的应用。
 - 厂商私有加速通道 (如 `vgate0`) 不在拦截范围内。
 - 只拦出站流量。
 
